@@ -22,7 +22,7 @@ SOLR_TIMEOUT_SECONDS = 10
 
 ## helpers ----------------------------------------------------------
 
-def call_solr( params: dict ) -> dict:
+def call_solr( params: dict ) -> list:
     """ Calls solr with params. """
     url = f'{SOLR_ROOT}select/'
     try:
