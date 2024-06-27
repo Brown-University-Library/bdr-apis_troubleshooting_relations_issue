@@ -23,7 +23,8 @@ SOLR_TIMEOUT_SECONDS = 10
 ## helpers ----------------------------------------------------------
 
 def call_solr( params: dict ) -> list:
-    """ Calls solr with params. """
+    """ Calls solr with params. 
+        Returns a list of solr docs. """
     url = f'{SOLR_ROOT}select/'
     try:
         r = requests.post (url, data=params, timeout=SOLR_TIMEOUT_SECONDS )
