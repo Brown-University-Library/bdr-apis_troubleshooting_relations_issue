@@ -49,18 +49,24 @@ def run_manager():
     log.info( '\n\nstarting run_manager()' )
     log.debug( f'PID, ``{PID}``' )
     ## initial solr call --------------------------------------------
+    """
+    Result of SolrDataFetcher.get_solr_data(), just after
+    `params = self._build_item_solr_params(self.pid, self.identities)`
+    """
     params = {
-        'q': f'pid:"{PID}" OR rel_is_annotation_of_ssim:"{PID}" OR '
-             'rel_is_member_of_ssim:"{PID}" OR '
-             'rel_is_derivation_of_ssim:"{PID}" OR '
-             'rel_is_part_of_ssim:"{PID}" OR '
-             'rel_dcterms_is_version_of_ssim:"{PID}" OR '
-             'rel_is_transcript_of_ssim:"{PID}" OR '
-             'rel_is_translation_of_ssim:"{PID}"',
         'fl': '*',
-        'wt': 'json',
-        'rows': 1
-    }
+        'fq': 'display:("BDR_PUBLIC")',
+        'q': 'pid:"test:cjkuchk4" OR rel_is_annotation_of_ssim:"test:cjkuchk4" OR '
+            'rel_is_member_of_ssim:"test:cjkuchk4" OR '
+            'rel_is_derivation_of_ssim:"test:cjkuchk4" OR '
+            'rel_is_part_of_ssim:"test:cjkuchk4" OR '
+            'rel_dcterms_is_version_of_ssim:"test:cjkuchk4" OR '
+            'rel_is_transcript_of_ssim:"test:cjkuchk4" OR '
+            'rel_is_translation_of_ssim:"test:cjkuchk4"',
+        'rows': 5000,
+        'sort': 'pid asc',
+        'wt': 'json'
+        }
     rsp = call_solr( params )
     
 
