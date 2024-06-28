@@ -30,7 +30,10 @@ def call_solr( params: dict ) -> list:
         r = requests.post (url, data=params, timeout=SOLR_TIMEOUT_SECONDS )
         if r.ok:
             data = json.loads(r.text)
-            log.debug( f'data, ``{pprint.pformat(data)}``' )
+            log.debug( """The solr-response follows, but note that only the `docs` list is actually returned. 
+Am showing the full-solr-response here for the params, which'll be shown at the bottom
+in the `responseHeader` key. """ )
+            log.debug( f'solr-data, ``{pprint.pformat(data)}``' )
             #make sure we got a hit
             if data['response']['docs']:
                 return data['response']['docs']
@@ -52,6 +55,7 @@ def run_manager():
     """
     Result of SolrDataFetcher.get_solr_data(), just after
     `params = self._build_item_solr_params(self.pid, self.identities)`
+    This first query seems to get anything related to the target-PID -- one resulting entry is the target-PID doc itself.
     """
     params = {
         'fl': '*',
