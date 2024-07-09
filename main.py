@@ -30,8 +30,9 @@ log = logging.getLogger( __name__ )
 
 PID = os.environ[ 'TARGET_PID' ]
 SOLR_ROOT = os.environ[ 'SOLR_ROOT' ]
-
 SOLR_TIMEOUT_SECONDS = 10
+
+log.debug( f'constants: PID, ``{PID}``; SOLR_ROOT, ``{SOLR_ROOT}``; SOLR_TIMEOUT_SECONDS, ``{SOLR_TIMEOUT_SECONDS}``' )
 
 
 ## helpers ----------------------------------------------------------
