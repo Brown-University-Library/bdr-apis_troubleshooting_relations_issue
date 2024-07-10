@@ -82,8 +82,20 @@ def call_solr( params: dict ) -> dict:
         raise Exception('solr connection error')
     
 
+def analyze_call_a_rsp( full_call_a_rsp: dict ) -> None:
+    """ Logs keys from the full solr-response. """
+    top_keys: list = list( full_call_a_rsp.keys() )  # ``['responseHeader', 'response']``
+    log.debug( f'top_keys, ``{top_keys}``' )
+    responseHeader_keys: list = list( full_call_a_rsp['responseHeader'].keys() )  # ``['status', 'QTime', 'params']``
+    log.debug( f'responseHeader_keys, ``{responseHeader_keys}``' )  
+    response_keys: list = list( full_call_a_rsp['response'].keys() )  # ``['numFound', 'start', 'docs']``
+    log.debug( f'response_keys, ``{response_keys}``' )
+    log.debug( f'numFound, ``{full_call_a_rsp["response"]["numFound"]}``' )
+    return
+
+
 def modify_solr_rsp( call_a_rsp: dict ) -> list:
-    """ Modifies the full solr-response from call_solr() into a list of solr-docs. """
+    """ Modifies the full solr-response-dict from call_solr() into a list of solr-docs. """
     return_data = []
     data = call_a_rsp
     log.debug( f'data.keys(), ``{data.keys()}``' )
@@ -95,18 +107,6 @@ def modify_solr_rsp( call_a_rsp: dict ) -> list:
     else:
         log.debug( 'no docs found' )
     return return_data
-
-
-def analyze_call_a_rsp( full_call_a_rsp: dict ) -> None:
-    """ Logs keys from the full solr-response. """
-    top_keys: list = list( full_call_a_rsp.keys() )  # ``['responseHeader', 'response']``
-    log.debug( f'top_keys, ``{top_keys}``' )
-    responseHeader_keys: list = list( full_call_a_rsp['responseHeader'].keys() )  # ``['status', 'QTime', 'params']``
-    log.debug( f'responseHeader_keys, ``{responseHeader_keys}``' )  
-    response_keys: list = list( full_call_a_rsp['response'].keys() )  # ``['numFound', 'start', 'docs']``
-    log.debug( f'response_keys, ``{response_keys}``' )
-    log.debug( f'numFound, ``{full_call_a_rsp["response"]["numFound"]}``' )
-    return
 
 
 def grab_main_item( modified_call_a_docs: list ) -> dict:
