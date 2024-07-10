@@ -86,7 +86,11 @@ def modify_solr_rsp( call_a_rsp: dict ) -> list:
     """ Modifies the full solr-response from call_solr() into a list of solr-docs. """
     return_data = []
     data = call_a_rsp
+    log.debug( f'data.keys(), ``{data.keys()}``' )
+    log.debug( f'response-docs.keys(), ``{data["response"].keys()}``' )
+    log.debug( f'response-docs, ``{pprint.pformat(data["response"]["docs"])}``' )
     if data['response']['docs']:
+        log.debug( 'docs found' )
         return_data = data['response']['docs']
     else:
         log.debug( 'no docs found' )
@@ -103,6 +107,20 @@ def analyze_call_a_rsp( full_call_a_rsp: dict ) -> None:
     log.debug( f'response_keys, ``{response_keys}``' )
     log.debug( f'numFound, ``{full_call_a_rsp["response"]["numFound"]}``' )
     return
+
+
+def grab_main_item( modified_call_a_docs: list ) -> dict:
+    """ Grabs the main item from the list of solr-docs. """
+    item: dict = {}
+    for doc in modified_call_a_docs:
+        if doc['pid'] == PID:
+            item = doc
+    log.debug( f'confirmation-step-2--type(item), ``{type(item)}``' )
+    log.debug( f'confirmation-step-2--count-of-item.keys, ``{len(list(item.keys()))}``' )
+    log.debug( f'confirmation-step-2--item.keys, ``{pprint.pformat(sorted(list(item.keys())))}``' )
+    log.debug( f'confirmation-step-2--item-pid, ``{item["pid"]}``' )            
+    return item
+
 
 def step_2_define_related_item_keys() -> list:
     """ Defines the keys to use to find related items. """
@@ -144,13 +162,19 @@ def run_manager():
     full_call_a_rsp: dict = call_solr( call_a_params )
     analyze_call_a_rsp( full_call_a_rsp )
     modified_call_a_docs: list = modify_solr_rsp( full_call_a_rsp )  # returns a list of solr-docs
+    log.debug( f'confirmation-step-1--type(solr_data), ``{type(modified_call_a_docs)}``')
+    log.debug( f'confirmation-step-1--len(solr_data), ``{len(modified_call_a_docs)}``' )
+    log.debug( f'confirmation-step-1--first-solr_data element, ``{pprint.pformat(list(modified_call_a_docs[0].keys()))}``')
 
-    ## grab first item -----------------------------------------------
-    item: dict = modified_call_a_docs[0]
-    log.debug( f'item, ``{pprint.pformat(item)}``' )
-    # log.debug( f'item top-level keys, ``{pprint.pformat(list(item.keys()))}``' )
-    log.debug(f'item top-level keys, ``{pprint.pformat(sorted(list(item.keys())))}``')
-    # log.debug( f'just out of curiosity, item-2, ``{pprint.pformat(modified_call_a_docs[1])}``' )
+
+    ## grab main item -----------------------------------------------
+    item: dict = grab_main_item( modified_call_a_docs )
+    # item: dict = modified_call_a_docs[0]
+    # log.debug( f'confirmation-step-2--type(item), ``{type(item)}``' )
+    # log.debug( f'confirmation-step-2--count-of-item.keys, ``{len(list(item.keys()))}``' )
+    # log.debug( f'confirmation-step-2--item.keys, ``{pprint.pformat(sorted(list(item.keys())))}``' )
+    # log.debug( f'confirmation-step-2--item-pid, ``{item["pid"]}``' )
+    # log.debug( f'item, ``{pprint.pformat(item)}``' )
 
     ## assert there is a `discover` key -----------------------------
     assert 'discover' in item, 'Access Denied'
