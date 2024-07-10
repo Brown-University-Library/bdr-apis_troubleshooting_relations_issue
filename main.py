@@ -23,6 +23,7 @@ lglvldct = {
     'DEBUG': logging.DEBUG,
     'INFO': logging.INFO }
 logging.basicConfig(
+    filename=os.environ['LOG_PATH'],
     level=lglvldct[lglvl],  # assigns the level-object to the level-key loaded from the envar
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
     datefmt='%d/%b/%Y %H:%M:%S' )
@@ -147,6 +148,8 @@ def run_manager():
     ## grab first item -----------------------------------------------
     item: dict = modified_call_a_docs[0]
     log.debug( f'item, ``{pprint.pformat(item)}``' )
+    # log.debug( f'item top-level keys, ``{pprint.pformat(list(item.keys()))}``' )
+    log.debug(f'item top-level keys, ``{pprint.pformat(sorted(list(item.keys())))}``')
     # log.debug( f'just out of curiosity, item-2, ``{pprint.pformat(modified_call_a_docs[1])}``' )
 
     ## assert there is a `discover` key -----------------------------
