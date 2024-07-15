@@ -12,12 +12,21 @@ Usage:
 - $ python main.py
 """
 
-import json, logging, os, pprint, sys
+import json, logging, os, pathlib, pprint, sys, time
 import requests
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv( find_dotenv(raise_error_if_not_found=True) )
+## load envars ------------------------------------------------------
+dotenv_path = pathlib.Path(__file__).resolve().parent.parent / '.env'
+assert dotenv_path.exists(), f'file does not exist, ``{dotenv_path}``'
+# print( f'dotenv_path, ``{dotenv_path}``' )
+load_dotenv( 
+    find_dotenv( str(dotenv_path), raise_error_if_not_found=True ), 
+    override=True 
+    )
 
+
+## set up logging ---------------------------------------------------
 lglvl: str = os.environ.get( 'LOGLEVEL', 'DEBUG' )
 lglvldct = {
     'DEBUG': logging.DEBUG,
@@ -29,10 +38,11 @@ logging.basicConfig(
     datefmt='%d/%b/%Y %H:%M:%S' )
 log = logging.getLogger( __name__ )
 
+
+## set up constants -------------------------------------------------
 PID = os.environ[ 'TARGET_PID' ]
 SOLR_ROOT = os.environ[ 'SOLR_ROOT' ]
 SOLR_TIMEOUT_SECONDS = 10
-
 log.debug( f'constants: PID, ``{PID}``; SOLR_ROOT, ``{SOLR_ROOT}``; SOLR_TIMEOUT_SECONDS, ``{SOLR_TIMEOUT_SECONDS}``' )
 
 
@@ -50,7 +60,8 @@ def prep_call_a_params() -> dict:
             f'rel_dcterms_is_version_of_ssim:"{PID}" OR '
             f'rel_is_transcript_of_ssim:"{PID}" OR '
             f'rel_is_translation_of_ssim:"{PID}"',
-        'rows': 5000,
+        # 'rows': 5000,
+        'rows': 10000,
         'sort': 'pid asc',
         'wt': 'json'
         }
@@ -62,13 +73,18 @@ def call_solr( params: dict ) -> dict:
         Returns full solr-response, unlike the actual call_solr() function, at bottom for reference. """
     url = f'{SOLR_ROOT}select/'
     try:
+        start_time = time.monotonic()
         r = requests.post (url, data=params, timeout=SOLR_TIMEOUT_SECONDS )
+        end_time = time.monotonic()
+        elapsed_time = end_time - start_time
+        log.debug( f'elapsed call_solr() time: ``{elapsed_time}`` seconds')
         if r.ok:
             data = json.loads(r.text)
-            if len( repr(data) ) > 5000:
-                log.debug( f'PARTIAL solr-data, ``{pprint.pformat(data)[0:5000]}...``' )
-            else:
-                log.debug( f'FULL solr-data, ``{pprint.pformat(data)}``' )
+            # if len( repr(data) ) > 5000:
+            #     log.debug( f'PARTIAL solr-data, ``{pprint.pformat(data)[0:5000]}...``' )
+            # else:
+            #     log.debug( f'FULL solr-data, ``{pprint.pformat(data)}``' )
+            log.debug( f'solr-data, ``{pprint.pformat(data)}``' )
             return data
             #make sure we got a hit
             # if data['response']['docs']:
@@ -112,9 +128,17 @@ def modify_solr_rsp( call_a_rsp: dict ) -> list:
 def grab_main_item( modified_call_a_docs: list ) -> dict:
     """ Grabs the main item from the list of solr-docs. """
     item: dict = {}
-    for doc in modified_call_a_docs:
+
+    start_time = time.monotonic()
+    # for doc in modified_call_a_docs:
+    for (i, doc) in enumerate(modified_call_a_docs):
         if doc['pid'] == PID:
+            log.debug( f'found target-pid at index, ``{i}` -- breaking loop' )
             item = doc
+            break
+    end_time = time.monotonic()
+    elapsed_time = end_time - start_time
+    log.debug( f'elapsed grab_main_item() time: ``{elapsed_time}`` seconds')
     log.debug( f'confirmation-step-2--type(item), ``{type(item)}``' )
     log.debug( f'confirmation-step-2--count-of-item.keys, ``{len(list(item.keys()))}``' )
     log.debug( f'confirmation-step-2--item.keys, ``{pprint.pformat(sorted(list(item.keys())))}``' )
@@ -149,7 +173,7 @@ def step_2_make_related_params( rel: str ) -> dict:
 
 ## manager ----------------------------------------------------------
 
-def run_manager():
+def run_manager() -> None:
     log.info( '\n\nstarting run_manager()' )
     log.debug( f'PID, ``{PID}``' )
     ## initial solr call --------------------------------------------
@@ -166,15 +190,17 @@ def run_manager():
     log.debug( f'confirmation-step-1--len(solr_data), ``{len(modified_call_a_docs)}``' )
     log.debug( f'confirmation-step-1--first-solr_data element, ``{pprint.pformat(list(modified_call_a_docs[0].keys()))}``')
 
-
     ## grab main item -----------------------------------------------
+    """
+    This is where the problem lies. 
+    The production code gets the main-item by looping through all the solr-docs, 
+        and grabbing the one with the target-PID.
+    The problem is that the original solr-doc query only grabs 5,000 docs,
+        and the target-PID may not be in the first 5,000 docs.
+    TODO: see how the item is actually used...
+        It does _not_ seem to be needed to build the related-items, below.
+    """
     item: dict = grab_main_item( modified_call_a_docs )
-    # item: dict = modified_call_a_docs[0]
-    # log.debug( f'confirmation-step-2--type(item), ``{type(item)}``' )
-    # log.debug( f'confirmation-step-2--count-of-item.keys, ``{len(list(item.keys()))}``' )
-    # log.debug( f'confirmation-step-2--item.keys, ``{pprint.pformat(sorted(list(item.keys())))}``' )
-    # log.debug( f'confirmation-step-2--item-pid, ``{item["pid"]}``' )
-    # log.debug( f'item, ``{pprint.pformat(item)}``' )
 
     ## assert there is a `discover` key -----------------------------
     assert 'discover' in item, 'Access Denied'
@@ -194,7 +220,6 @@ def run_manager():
             log.debug( f"no related_docs found for rel, ``{rel}``" )
     log.debug( f'count of related_items, ``{len(related_items)}``' )
     # log.debug( f'related_items, ``{pprint.pformat(related_items)}``' )
-
 
     sys.exit( 'done' )
 
