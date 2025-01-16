@@ -64,11 +64,12 @@ def prep_call_a_params() -> dict:
         f'rel_dcterms_is_version_of_ssim:"{PID}" OR '
         f'rel_is_transcript_of_ssim:"{PID}" OR '
         f'rel_is_translation_of_ssim:"{PID}"',
-        # 'rows': 5000,
-        'rows': 10000,
+        'rows': 5000,
+        # 'rows': 10000,
         'sort': 'pid asc',
         'wt': 'json',
     }
+    log.debug(f'params for initial solr call, ``{pprint.pformat(params)}``')
     return params
 
 
@@ -140,6 +141,7 @@ def grab_main_item(modified_call_a_docs: list) -> dict:
             log.debug(f'found target-pid at index, ``{i}` -- breaking loop')
             item = doc
             break
+    log.debug(f'break occurred with `i` at, ``{i}``')
     end_time = time.monotonic()
     elapsed_time = end_time - start_time
     log.debug(f'elapsed grab_main_item() time: ``{elapsed_time}`` seconds')
@@ -167,7 +169,7 @@ def step_2_define_related_item_keys() -> list:
 def step_2_make_related_params(rel: str) -> dict:
     """Makes the related-params."""
     related_params = {'q': f'{rel}:"{PID}"', 'fl': '*', 'wt': 'json', 'rows': 1}
-    log.debug(f'related_params, ``{related_params}``')
+    log.debug(f'related_params, ``{pprint.pformat(related_params)}``')
     return related_params
 
 
