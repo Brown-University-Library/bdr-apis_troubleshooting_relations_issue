@@ -1,6 +1,6 @@
 """
-This script is intened to reproduce an error with one of the Hall-Hoag organization-items.
-That item appears as a non-public iem, despite it's permissions being set correctly.
+This script is intended to reproduce an error with one of the Hall-Hoag organization-items.
+That item appears as a non-public item, despite its permissions being set correctly.
 We believe the issue has to do with preparing the data for the item's relations -- which we think
     causes an Exception that _appears_ as an AccessDenied exception.
 This script isn't yet working, because it doesn't fail as expected -- and thus must not be accurately
